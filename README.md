@@ -35,7 +35,33 @@ To build the GetEnvoy package with the build image, run:
 docker run -v ${OUTPUT_DIR}:/tmp/getenvoy-package gcr.io/getenvoy-package/build-<DISTRIBUTION>:<GIT_SHA> ./package_envoy.py --dist <DISTRIBUTION> --artifacts_directory /tmp/getenvoy-package
 ```
 
-Then the tar package will be copied to where `OUTPUT_DIR` points to. The GetEnvoy package is versioned with upstream git SHA and the build repo SHA. i
+Then the tar package will be copied to where `OUTPUT_DIR` points to. The GetEnvoy package is versioned with upstream git SHA and the build repo SHA.
+
+## Build GetEnvoy FIPS packages
+
+This repo is capable of building a FIPS Compliant Envoy as long as the commands are run on a host running the Linux Kernel version 4.X or 5.X.  This build will work on earlier versions of the Kernel, but the resulting executable will not be compliant with the Boring Crypto certification document.
+
+Until the upstream RBE environment is configured, you will need to setup a build host first.  16 cores, 64 gigs of ram and 250 gigs of space are recommended.  Additionally, you will need the following applications running on your host:
+
+- git224
+- Bazel
+- Docker
+- Patch
+- Docker local registry
+
+The first thing you will need to do is build images locally using `make`.  Then push the build images to your local registry and tag them with `latest`.  This step will be necessary until the build container is published to the GCP project.
+
+Once the above has been done, you can build Envoy FIPS by using the following command:
+```
+sudo -E ./envoy_pkg/package_envoy.py --variant envoy-fips --dist linux-glibc-fips-docker --artifacts_directory /tmp/getenvoy-package --envoy_commit=d362e791eb9e4efa8d87f6d878740e72dc8330ac --build_rpm_package
+```
+
+## FIPS RPM
+The executables created by the steps above will create a version of Envoy that does not depend on GLIBC, making it portable between CentOS7 and Ubuntu.  However, it does mean that an additional library needs to be downloaded and deployed on the host machine, and the `LD_LIBRARY_PATH` variable needs to point to this library.  The RPM automatically goes through these steps and adds a scipt to /etc/profile.d to specify the LD_LIBRARY_PATH automatically.  If you wish to do it yourself, run these lines of code:
+```
+LD_LIBRARY_PATH=/usr/local/lib
+export LD_LIBRARY_PATH
+```
 
 # Debugging package pipeline
 

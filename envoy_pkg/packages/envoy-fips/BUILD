@@ -1,6 +1,4 @@
-#!/bin/bash
-
-# Copyright 2021 Tetrate
+# Copyright 2019 Tetrate
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
+load("//packages:getenvoy_package.bzl", "getenvoy_package")
 
-export DEBIAN_FRONTEND=noninteractive
-
-curl -sSL https://releases.llvm.org/9.0.0/clang+llvm-9.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz | \
-  tar Jx --strip-components=1 -C /usr/local
+getenvoy_package(
+    name = "envoy-fips",
+    binary_target = "@envoy//source/exe:envoy-static",
+)

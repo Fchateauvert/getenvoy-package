@@ -55,6 +55,9 @@ def bazelOptions(args):
     if args.config:
         options["config"].append(args.config)
 
+    if args.variant == "envoy-fips":
+        options["linkopt"].append("-lc++")
+
     options["config"].append(args.variant)
     options["config"].append(args.dist)
     if os.path.isdir("envoy-override"):
@@ -297,7 +300,7 @@ def main():
     parser = argparse.ArgumentParser(description="Envoy packaging script")
     parser.add_argument("--variant",
                         default="envoy",
-                        choices=["envoy", "istio-proxy"])
+                        choices=["envoy", "istio-proxy", "envoy-fips"])
     parser.add_argument("--envoy_commit",
                         default=os.environ.get("ENVOY_COMMIT", "main"))
     parser.add_argument("--envoy_repo")
