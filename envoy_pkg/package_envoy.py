@@ -39,12 +39,12 @@ def runBazel(command, targets, startup_options={}, options={}):
         if v:
             argv.append("--{}={}".format(k, v))
     argv.append(command)
-    # argv.append("--linkopt=-lc++")
     for k, v in options.items():
         if v:
             argv.extend(["--{}={}".format(k, i) for i in v])
     argv.extend(targets)
-    logging.debug(" ".join(argv))
+    logging.info(" ".join(argv))
+    print(" ".join(argv))
     subprocess.check_call(argv)
 
 
@@ -55,6 +55,9 @@ def bazelOptions(args):
 
     if args.config:
         options["config"].append(args.config)
+
+    if args.variant == "envoy-fips":
+        options["linkopt"].append("-lc++")
 
     options["config"].append(args.variant)
     options["config"].append(args.dist)
