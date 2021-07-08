@@ -20,6 +20,3 @@ export DEBIAN_FRONTEND=noninteractive
 
 curl -sSL https://releases.llvm.org/9.0.0/clang+llvm-9.0.0-x86_64-linux-gnu-ubuntu-16.04.tar.xz | \
   tar Jx --strip-components=1 -C /usr/local
-
-# Force libc++ to be a static link by putting a linker script to do that.
-# echo 'INPUT(-l:libc++.a -l:libc++abi.a -lm -lpthread)' > /usr/local/lib/libc++.so

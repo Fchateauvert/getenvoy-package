@@ -22,12 +22,17 @@ RBE_FIPS_TAG = $(RBE_FIPS_IMAGE):$(SHA)
 BAZEL_IMAGE = gcr.io/getenvoy-package/bazel-$(DISTRO)
 BAZEL_TAG = $(BAZEL_IMAGE):$(SHA)
 
-$(OUTPUT_DIR)/$(DISTRO)/envoy-package-build-bazel.tar: $(OUTPUT_DIR)/$(DISTRO)/bazel-docker-context.tar $(OUTPUT_DIR)/$(DISTRO)/envoy-package-build-rbe-fips.tar
+$(OUTPUT_DIR)/$(DISTRO)/envoy-package-build-bazel.tar: $(OUTPUT_DIR)/$(DISTRO)/bazel-docker-context.tar $(OUTPUT_DIR)/$(DISTRO)/envoy-package-build-rbe.tar $(OUTPUT_DIR)/$(DISTRO)/envoy-package-build-rbe-fips.tar
 	@docker inspect --format='{{.Id}}' $(RBE_TAG)
 	@cat $(OUTPUT_DIR)/$(DISTRO)/bazel-docker-context.tar | \
 	    docker build - -t $(BAZEL_TAG) -f Dockerfile.bazel \
 	    --build-arg rbe_image_tag=$(SHA)
 	@docker save $(BAZEL_TAG) -o $@
+
+$(OUTPUT_DIR)/$(DISTRO)/envoy-package-build-rbe.tar: build_container/getenvoy_linux_glibc_rbe.sh Dockerfile.rbe
+	@mkdir -p $(OUTPUT_DIR)/$(DISTRO)
+	@docker build . -t $(RBE_TAG) -f Dockerfile.rbe
+	@docker save $(RBE_TAG) -o $@
 
 $(OUTPUT_DIR)/$(DISTRO)/envoy-package-build-rbe-fips.tar: build_container/getenvoy_linux_glibc_bazel.sh build_container/getenvoy_linux_glibc_rbe_fips.sh  Dockerfile.rbe-fips
 	@mkdir -p $(OUTPUT_DIR)/$(DISTRO)
@@ -41,7 +46,9 @@ $(OUTPUT_DIR)/$(DISTRO)/bazel-docker-context.tar: $(OUTPUT_DIR)/common-context.t
 	@tar -r Dockerfile.bazel -f $@
 
 .PHONY: push
-push: $(OUTPUT_DIR)/$(DISTRO)/envoy-package-build-rbe-fips.tar $(OUTPUT_DIR)/$(DISTRO)/envoy-package-build-bazel.tar
+push: $(OUTPUT_DIR)/$(DISTRO)/envoy-package-build-rbe.tar $(OUTPUT_DIR)/$(DISTRO)/envoy-package-build-rbe-fips.tar $(OUTPUT_DIR)/$(DISTRO)/envoy-package-build-bazel.tar
+	@docker load -i $(OUTPUT_DIR)/$(DISTRO)/envoy-package-build-rbe.tar 
+	@docker push $(RBE_TAG)
 	@docker load -i $(OUTPUT_DIR)/$(DISTRO)/envoy-package-build-rbe-fips.tar
 	@docker push $(RBE_FIPS_TAG)
 	@docker load -i $(OUTPUT_DIR)/$(DISTRO)/envoy-package-build-bazel.tar 
